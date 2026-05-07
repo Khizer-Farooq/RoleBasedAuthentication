@@ -48,20 +48,77 @@ exports.loginUser = async (data) => {
     throw new Error("Invalid Credentials");
   }
 
-  const token = jwt.sign(
+  const accessToken = jwt.sign(
     {
       id: user._id,
       role: user.role
     },
-    process.env.JWT_SECRET,
+    process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: "1d"
+      expiresIn: "15m"
+    }
+  );
+
+  const refreshToken = jwt.sign(
+    {
+      id: user._id
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: "7d"
+    }
+  );
+
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  return {
+    message: "Login Success",
+    accessToken,
+    refreshToken,
+    user: {
+      id: user._id,
+      email: user.email,
+      role: user.role
+    }
+  };
+
+};
+
+exports.refreshAccessToken = async (refreshTokenData) => {
+
+  const { refreshToken } = refreshTokenData;
+
+  if (!refreshToken) {
+    throw new Error("No refresh token provided");
+  }
+
+  const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+  const user = await User.findById(decoded.id);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.refreshToken !== refreshToken) {
+    throw new Error("Invalid refresh token");
+  }
+
+  const newAccessToken = jwt.sign(
+    {
+      id: user._id,
+      role: user.role
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: "15m"
     }
   );
 
   return {
-    message: "Login Success",
-    token
+    message: "Token Refreshed",
+    accessToken: newAccessToken
   };
 
 };
