@@ -1,33 +1,53 @@
-import { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const loginSchema = z.object({
+
+  email: z
+    .string()
+    .email("Invalid Email"),
+
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+
+});
+
 
 function Login() {
 
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
 
-  const handleLogin = async (e) => {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    resolver: zodResolver(loginSchema)
 
-    e.preventDefault();
+  });
+
+  const onSubmit = async (data) => {
 
     try {
-
       const res = await axios.post(
         "http://localhost:5000/api/auth/login",
-        {
-          email,
-          password
-        }
+        data
       );
 
-    //   localStorage.setItem("token", res.data.token);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
-    localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem(
+        "accessToken",
+        res.data.accessToken
+      );
 
-      alert("Login Success");
+      localStorage.setItem(
+        "refreshToken",
+        res.data.refreshToken
+      );
 
       navigate("/dashboard");
 
@@ -39,12 +59,15 @@ function Login() {
 
   };
 
+
+
+
   return (
 
     <div className="flex justify-center items-center h-screen bg-gray-100">
 
       <form
-        onSubmit={handleLogin}
+        onSubmit={handleSubmit(onSubmit)}
         className="bg-white p-8 rounded-lg shadow-lg w-96"
       >
 
@@ -55,36 +78,31 @@ function Login() {
         <input
           type="email"
           placeholder="Email"
-          className="w-full border p-3 mb-4 rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          className="w-full border p-3 mb-1 rounded"
+          {...register("email")}
         />
+
+        <p className="text-red-500 text-sm mb-3">
+          {errors.email?.message}
+        </p>
 
         <input
           type="password"
           placeholder="Password"
-          className="w-full border p-3 mb-4 rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          className="w-full border p-3 mb-1 rounded"
+          {...register("password")}
         />
 
-        <button
-          className="bg-black text-white w-full p-3 rounded"
-        >
+        <p className="text-red-500 text-sm mb-4">
+          {errors.password?.message}
+        </p>
+
+        <button className="bg-black text-white w-full p-3 rounded">
           Login
         </button>
 
-        <p className="mt-4 text-center">
-
-          No account?
-
-          <Link
-            to="/register"
-            className="text-blue-500 ml-2"
-          >
-            Register
-          </Link>
-
+        <p className="mt-4 text-center"> No account?
+          <Link to="/register" className="text-blue-500 ml-2"> Register </Link>
         </p>
 
       </form>

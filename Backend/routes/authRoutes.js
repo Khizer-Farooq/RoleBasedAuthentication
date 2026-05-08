@@ -6,6 +6,7 @@ const {
   register,
   login,
   refreshAccessToken
+  ,verifyEmail
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -17,7 +18,10 @@ const User = require("../models/User");
 router.post("/register", register);
 router.post("/login", login);
 
-
+router.get(
+  "/verify-email/:token",
+  verifyEmail
+);
 // PROTECTED ROUTE
 router.get(
   "/profile",

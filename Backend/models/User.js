@@ -27,10 +27,17 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  isVerified: {
+  type: Boolean,
+  default: false
+},
 
-  resetToken: String,
+verificationToken: {
+  type: String,
+  default: ""
+},
 
-  resetTokenExpire: Date
+  
 
 });
 
